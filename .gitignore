@@ -4,8 +4,8 @@ a.out
 *.json
 .vscode
 node_modules
-static
-templates
+# static
+# templates
 test
 test.c
 server
