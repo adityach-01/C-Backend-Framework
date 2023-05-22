@@ -564,8 +564,9 @@ OUT login(Request *req, int new_socket)
         if (x == 0 && y == 0)
         {
             void *pt = req->query_params.search(&req->query_params, "redirect");
-            if (!pt)
+            if (!pt){
                 pt = (char *)("/about");
+            }
             redirect(new_socket, (char *)(pt), (char *)email);
             // render_template(new_socket, "login.html");
             return NULL;

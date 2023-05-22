@@ -4,8 +4,9 @@ typedef struct Response
 {
     char HTTP_version[10];
     int status_code;
-    char status_message[10];
+    char status_message[100];
     struct Header *headers;
+    char *body;
 } Response;
 
 
