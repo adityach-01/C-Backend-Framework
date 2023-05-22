@@ -22,5 +22,6 @@ struct Request *parse(char *request);
 struct Request *receiveHeader(int sockfd);
 Dictionary get_json(Request *);
 Dictionary get_form_data(Request *);
+char *get_header(Request *req, char *name);
 
 #endif

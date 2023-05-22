@@ -474,3 +474,15 @@ Dictionary get_form_data(Request *req)
     }
     return d;
 }
+
+char *get_header(Request *req, char *name){
+    Header *h = req->headers;
+    while(h){
+        if(strcmp(h->name, name) == 0){
+            return h->values;
+        }
+        h = h->next;
+    }
+
+    return NULL;
+}

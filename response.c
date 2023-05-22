@@ -253,3 +253,13 @@ void set_header_and_HTTPversion(int status_code, struct Response *response)
     header->values = strdup("Content-Type, Authorization");
     header->next = NULL;
 }
+
+void set_header(Response *res, char *name, char *val){
+    Header *h = (Header *)malloc(sizeof(Header));
+    h->name = strdup(name);
+    h->values = strdup(val);
+
+    h->next = res->headers;
+    res->headers = h;
+}
+
