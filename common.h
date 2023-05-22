@@ -20,7 +20,7 @@ typedef struct Header
 #include "response.h"
 
 #define IN Request *, int
-#define OUT void *
+#define OUT char *
 
 typedef struct route
 {

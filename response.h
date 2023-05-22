@@ -8,6 +8,7 @@ typedef struct Response
     struct Header *headers;
 } Response;
 
+
 #include "common.h"
 
 void free_header_request(Header *h);

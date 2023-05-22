@@ -135,6 +135,7 @@ int strcmp_dynamic(char *end, Request *req)
     // extract the parameter name
     char name[30];
     strncpy(name, dyn + 1, (int)(dyn_end - dyn - 1));
+    name[dyn_end-dyn-1] = '\0';
 
     // even the dynamic part of in_url starts at num_points
     // getting the value of the parameter
@@ -152,8 +153,10 @@ int strcmp_dynamic(char *end, Request *req)
     dyn_start += dyn_len;
 
     // selecting the data type of the parameter
+    // printf("Name is %s\n", name);
     char *first = strtok(name, ":");
     char *second = strtok(NULL, ":");
+    // printf("first:%s second:%s dyn_str:%s\n", first, second, dyn_string);
 
     int answer;
     if ((answer = strcmp(dyn_end, dyn_start)) == 0)
@@ -171,6 +174,7 @@ int strcmp_dynamic(char *end, Request *req)
             if (strcmp(first, "int") == 0)
             {
                 int val = atoi(dyn_string);
+                // printf("Val is %d\n", val);
                 req->query_params.insert(&req->query_params, second, &val, 0);
             }
             else
@@ -363,12 +367,18 @@ void *execute(void *ptr)
         // print_dict(d);
 
         int status;
+        // printf("ABC\n");
+
         OUT (*func)
         (IN) = get_function(req, &status, new_socket);
+
+        // printf("ABC\n");
 
         if (!func && status == 404)
         {
             // also search the file in the server
+            // printf("ABC\n");
+
             search_and_send_file(new_socket, req->url);
         }
 
@@ -376,6 +386,8 @@ void *execute(void *ptr)
         else if (auth == 1 && status != 200)
         {
             // means that there is some auth issue
+            // printf("ABC\n");
+
             send_forbidden_info(new_socket, status);
         }
         else
@@ -492,7 +504,7 @@ void create_app(int port)
     int time_diff = 30;
     pthread_t session_cleaner, server;
     pthread_create(&server, NULL, create_server, (void *)&port);
-    pthread_create(&session_cleaner, NULL, clean_session, (void *)&time_diff);
+    if(auth) pthread_create(&session_cleaner, NULL, clean_session, (void *)&time_diff);
 
     pthread_join(server, NULL);
 }
@@ -584,12 +596,18 @@ OUT gallery(Request *req, int new_socket)
 }
 
 OUT about_id(Request *req, int new_socket)
-{
+{   
+    printf("ABC in func\n");
+    
     Dictionary d = req->query_params;
+
     void *val = d.search(&d, "id");
+    printf("ID is %d\n", *(int *)val);
     Dictionary c = init_dict();
-    c.insert(&c, "id", val, 1);
+    c.insert(&c, "id", val, 0);
+
     jsonify(new_socket, 200, &c, 0, 1);
+
     return NULL;
 }
 
@@ -603,16 +621,16 @@ int main(int argc, char *argv[])
 
     char *methods[] = {"GET", "POST"};
     int num = 2;
-    LoginManager();
+    // LoginManager();
     add_route("/", &home, methods, num);
     add_route("/login", &login, methods, num);
     add_route("/about", &about, methods, num);
     add_route("/quiz", &quiz, methods, num);
     add_route("/gallery", &gallery, methods, num);
-    add_route("/gallery/<id>", &about_id, methods, num);
-    login_required("/about");
-    login_required("/quiz");
-    login_required("/gallery");
+    add_route("/gallery/<int:id>", &about_id, methods, num);
+    // login_required("/about");
+    // login_required("/quiz");
+    // login_required("/gallery");
     create_app(port);
 
     return 0;
