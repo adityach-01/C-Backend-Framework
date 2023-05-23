@@ -278,6 +278,7 @@ void search_and_send_file(int new_socket, char *path)
     int status_code = 200;
     int x = stat(path + 1, &st);
 
+    // create response object
     struct Response *response = malloc(sizeof(struct Response));
 
     if (x == -1)
@@ -319,6 +320,7 @@ void send_forbidden_info(int socket, int status)
         return;
     }
 
+    /// create the response object
     struct Response *response = malloc(sizeof(struct Response));
 
     set_header_and_HTTPversion(status, response);
@@ -326,6 +328,9 @@ void send_forbidden_info(int socket, int status)
 
     while (h->next)
         h = h->next;
+
+
+    // change this to something more professional
 
     char forbid[200] = "Forbidden for you, chal nikal lawde !!";
     h->next = malloc(sizeof(struct Header));
@@ -600,8 +605,9 @@ OUT quiz(Request *req, int new_socket)
 
 OUT gallery(Request *req, int new_socket)
 {
-    // render_template(new_socket, "gallery.html");
-    return "This is gallery!";
+    render_template(new_socket, "gallery.html");
+    // return "This is gallery!";
+    return NULL;
 }
 
 OUT about_id(Request *req, int new_socket)

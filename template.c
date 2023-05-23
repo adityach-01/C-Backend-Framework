@@ -101,16 +101,16 @@ void redirect(int new_socket, char *end, char *pk){
     set_header_and_HTTPversion(302, response);
     struct Header *h = response->headers;
 
-    printf("endpoint is :%s\n", end);
+    // printf("endpoint is :%s\n", end);
 
     h->name = strdup("Location");
     h->values = strdup(end);
     h->next = malloc(sizeof(Header));
     h = h->next;
     h->name = strdup("Connection");
-    h->values = strdup("close");
+    h->values = strdup("keep-alive");
 
-    printf("endpoint is :%s\n", end);
+    // printf("endpoint is :%s\n", end);
 
 
     if(pk && auth){
@@ -126,7 +126,7 @@ void redirect(int new_socket, char *end, char *pk){
         // h->values = strdup("Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c");
     }
 
-    printf("endpoint is :%s\n", end);
+    // printf("endpoint is :%s\n", end);
 
     
     h->next = NULL;

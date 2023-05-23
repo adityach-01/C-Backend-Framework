@@ -13,7 +13,7 @@ typedef struct sessionHead{
 
 #include "request.h"
 int check_authentication(Request *, int);
-int user_loader(Request *req, char *pk, int socket);
+int user_loader(Request *req, char *pk, int socket, int status);
 char *generate_session_token( char *pk);
 void LoginManager();
 void login_required(char *end);

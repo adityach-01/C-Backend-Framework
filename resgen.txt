@@ -1,0 +1,6 @@
+server.c 282 324
+template.c 29 64 100
+
+we may receive 4xx as a result of the check auth function, but we can confgure the user_loader
+to send 302 after it has received 4xx requests, if it is not 404
+ex. redirection to login after receiving 403 (forbidden), or it ca leave it to the default system handler

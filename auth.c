@@ -73,8 +73,11 @@ char *generate_session_token(char *pk)
 }
 
 // user implementable function that returns that  status code for the request
-int user_loader(Request *req, char *pk, int socket)
-{
+int user_loader(Request *req, char *pk, int socket, int status)
+{   
+    // user can do anything with the status code
+    // redirect or display forbidden as per need
+
     // populates current user in the req array
     if (!pk || strcmp(pk, "adityachoudhary.01m@gmail.com") != 0)
     {
@@ -105,6 +108,7 @@ int check_authentication(Request *req, int sock)
     Header *h = req->headers;
     char *cookie;
     char temp[100];
+    int status = 200;
 
     while (h)
     {
@@ -122,7 +126,7 @@ int check_authentication(Request *req, int sock)
     if (!h)
     {
         // no cookie
-        return 403; // forbidden
+        return user_loader(req, NULL, sock, 403);; // forbidden
     }
 
     // get the pk corresponding to the cookie
@@ -140,12 +144,11 @@ int check_authentication(Request *req, int sock)
         st = st->next;
     }
 
-    // if(!st){
-    //     // no such cookie is logged in
-    //     return 403;  // forbidden
-    // }
+    if(!st){
+        // no such cookie is logged in
+        return user_loader(req, pk, sock, 403);  // forbidden
+    }
 
-    int status = user_loader(req, pk, sock);
 
-    return status;
+    return user_loader(req, pk, sock, status);
 }
