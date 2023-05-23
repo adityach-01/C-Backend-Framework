@@ -2,9 +2,9 @@
 #define RESPONSE_H
 typedef struct Response
 {
-    char HTTP_version[10];
+    char HTTP_version[20];
     int status_code;
-    char status_message[10];
+    char status_message[20];
     struct Header *headers;
 } Response;
 

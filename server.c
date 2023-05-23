@@ -289,7 +289,7 @@ void search_and_send_file(int new_socket, char *path)
         h = h->next;
 
     char *content_length = malloc(100);
-    sprintf(content_length, "%ld", st.st_size);
+    sprintf(content_length, "%lld", st.st_size);
 
     h->next = malloc(sizeof(struct Header));
     h = h->next;
@@ -363,9 +363,11 @@ void *execute(void *ptr)
         // print_dict(d);
 
         int status;
-        OUT (*func)
-        (IN) = get_function(req, &status, new_socket);
+        char *out_pointer;
+        // return the function pointer, handler
+        OUT (*func)(IN) = get_function(req, &status, new_socket);
 
+        // no such endpoint
         if (!func && status == 404)
         {
             // also search the file in the server
@@ -374,12 +376,20 @@ void *execute(void *ptr)
 
         // add authorization code
         else if (auth == 1 && status != 200)
-        {
+        {   
+            // authorizartion is on but status is not 200, means auth isue
             // means that there is some auth issue
             send_forbidden_info(new_socket, status);
         }
-        else
-            (*func)(req, new_socket);
+        else{
+            // execute the handler
+            out_pointer = (*func)(req, new_socket);
+        }
+
+        if(out_pointer != NULL){
+            // send the message to the client
+            send(new_socket, out_pointer, strlen(out_pointer), 0);
+        }
 
         free_request(req);
     }
@@ -492,7 +502,7 @@ void create_app(int port)
     int time_diff = 30;
     pthread_t session_cleaner, server;
     pthread_create(&server, NULL, create_server, (void *)&port);
-    pthread_create(&session_cleaner, NULL, clean_session, (void *)&time_diff);
+    if(auth) pthread_create(&session_cleaner, NULL, clean_session, (void *)&time_diff);
 
     pthread_join(server, NULL);
 }
@@ -579,8 +589,8 @@ OUT quiz(Request *req, int new_socket)
 
 OUT gallery(Request *req, int new_socket)
 {
-    render_template(new_socket, "gallery.html");
-    return NULL;
+    // render_template(new_socket, "gallery.html");
+    return "This is gallery!";
 }
 
 OUT about_id(Request *req, int new_socket)
@@ -603,16 +613,16 @@ int main(int argc, char *argv[])
 
     char *methods[] = {"GET", "POST"};
     int num = 2;
-    LoginManager();
+    // LoginManager();
     add_route("/", &home, methods, num);
     add_route("/login", &login, methods, num);
     add_route("/about", &about, methods, num);
     add_route("/quiz", &quiz, methods, num);
     add_route("/gallery", &gallery, methods, num);
     add_route("/gallery/<id>", &about_id, methods, num);
-    login_required("/about");
-    login_required("/quiz");
-    login_required("/gallery");
+    // login_required("/about");
+    // login_required("/quiz");
+    // login_required("/gallery");
     create_app(port);
 
     return 0;

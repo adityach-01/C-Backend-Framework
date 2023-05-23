@@ -37,7 +37,7 @@ void render_template(int new_socket, char *p){
     while(h->next) h = h->next;
 
     char content_length[100];
-    sprintf(content_length, "%ld", st.st_size);
+    sprintf(content_length, "%lld", st.st_size);
 
     h->next = malloc(sizeof(struct Header));
     h = h->next;
