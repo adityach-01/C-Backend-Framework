@@ -15,6 +15,8 @@
 #include "request.h"
 #include "response.h"
 
+extern int auth;
+
 void render_template(int new_socket, char *p){
     struct stat st;
     char path[100];
@@ -99,6 +101,7 @@ void redirect(int new_socket, char *end, char *pk){
     set_header_and_HTTPversion(302, response);
     struct Header *h = response->headers;
 
+    printf("endpoint is :%s\n", end);
 
     h->name = strdup("Location");
     h->values = strdup(end);
@@ -107,7 +110,10 @@ void redirect(int new_socket, char *end, char *pk){
     h->name = strdup("Connection");
     h->values = strdup("close");
 
-    if(pk){
+    printf("endpoint is :%s\n", end);
+
+
+    if(pk && auth){
         char *token = generate_session_token(pk);
         h->next = malloc(sizeof(Header));
         h = h->next;
@@ -119,6 +125,9 @@ void redirect(int new_socket, char *end, char *pk){
         h->values = strdup(content);
         // h->values = strdup("Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c");
     }
+
+    printf("endpoint is :%s\n", end);
+
     
     h->next = NULL;
 

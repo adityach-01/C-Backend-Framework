@@ -4,9 +4,11 @@ typedef struct Response
 {
     char HTTP_version[20];
     int status_code;
-    char status_message[20];
+    char status_message[100];
     struct Header *headers;
+    char *body;
 } Response;
+
 
 #include "common.h"
 
@@ -17,5 +19,8 @@ char **tokenize_command(char *cmd);
 void send_response_header(int client_sockfd, struct Response *response);
 void send_response_file(int new_socket, char *url);
 void set_header_and_HTTPversion(int status_code, struct Response *response);
+void set_header(Response *res, char *name, char *val);
+void CORS_enable(char *address);
+void send_response(Response *res);
 
 #endif

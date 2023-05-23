@@ -135,6 +135,7 @@ int strcmp_dynamic(char *end, Request *req)
     // extract the parameter name
     char name[30];
     strncpy(name, dyn + 1, (int)(dyn_end - dyn - 1));
+    name[dyn_end-dyn-1] = '\0';
 
     // even the dynamic part of in_url starts at num_points
     // getting the value of the parameter
@@ -152,8 +153,10 @@ int strcmp_dynamic(char *end, Request *req)
     dyn_start += dyn_len;
 
     // selecting the data type of the parameter
+    // printf("Name is %s\n", name);
     char *first = strtok(name, ":");
     char *second = strtok(NULL, ":");
+    // printf("first:%s second:%s dyn_str:%s\n", first, second, dyn_string);
 
     int answer;
     if ((answer = strcmp(dyn_end, dyn_start)) == 0)
@@ -171,6 +174,7 @@ int strcmp_dynamic(char *end, Request *req)
             if (strcmp(first, "int") == 0)
             {
                 int val = atoi(dyn_string);
+                // printf("Val is %d\n", val);
                 req->query_params.insert(&req->query_params, second, &val, 0);
             }
             else
@@ -363,14 +367,17 @@ void *execute(void *ptr)
         // print_dict(d);
 
         int status;
-        char *out_pointer;
-        // return the function pointer, handler
-        OUT (*func)(IN) = get_function(req, &status, new_socket);
+        // printf("ABC\n");
 
-        // no such endpoint
+        OUT (*func)(IN) = get_function(req, &status, new_socket);
+        char *out_pointer;
+        // printf("ABC\n");
+
         if (!func && status == 404)
         {
             // also search the file in the server
+            // printf("ABC\n");
+
             search_and_send_file(new_socket, req->url);
         }
 
@@ -379,6 +386,8 @@ void *execute(void *ptr)
         {   
             // authorizartion is on but status is not 200, means auth isue
             // means that there is some auth issue
+            // printf("ABC\n");
+
             send_forbidden_info(new_socket, status);
         }
         else{
@@ -386,10 +395,11 @@ void *execute(void *ptr)
             out_pointer = (*func)(req, new_socket);
         }
 
-        if(out_pointer != NULL){
-            // send the message to the client
-            send(new_socket, out_pointer, strlen(out_pointer), 0);
-        }
+        // if(out_pointer != NULL){
+        //     // send the message to the client
+                // set the header and configure the body
+        //     send(new_socket, out_pointer, strlen(out_pointer), 0);
+        // }
 
         free_request(req);
     }
@@ -562,8 +572,9 @@ OUT login(Request *req, int new_socket)
         if (x == 0 && y == 0)
         {
             void *pt = req->query_params.search(&req->query_params, "redirect");
-            if (!pt)
+            if (!pt){
                 pt = (char *)("/about");
+            }
             redirect(new_socket, (char *)(pt), (char *)email);
             // render_template(new_socket, "login.html");
             return NULL;
@@ -594,12 +605,18 @@ OUT gallery(Request *req, int new_socket)
 }
 
 OUT about_id(Request *req, int new_socket)
-{
+{   
+    printf("ABC in func\n");
+    
     Dictionary d = req->query_params;
+
     void *val = d.search(&d, "id");
+    printf("ID is %d\n", *(int *)val);
     Dictionary c = init_dict();
-    c.insert(&c, "id", val, 1);
+    c.insert(&c, "id", val, 0);
+
     jsonify(new_socket, 200, &c, 0, 1);
+
     return NULL;
 }
 
@@ -619,7 +636,7 @@ int main(int argc, char *argv[])
     add_route("/about", &about, methods, num);
     add_route("/quiz", &quiz, methods, num);
     add_route("/gallery", &gallery, methods, num);
-    add_route("/gallery/<id>", &about_id, methods, num);
+    add_route("/gallery/<int:id>", &about_id, methods, num);
     // login_required("/about");
     // login_required("/quiz");
     // login_required("/gallery");

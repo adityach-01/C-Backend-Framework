@@ -14,7 +14,9 @@ int isNull(char *s){
 }
 
 void insert_dict(Dictionary *dictionary, char *key, void *value, int isString)
-{
+{   
+    if(!key || !value) return;
+    
     node *head = dictionary->head;
     node *temp = (node *)malloc(sizeof(node));
     temp->isString = isString;
