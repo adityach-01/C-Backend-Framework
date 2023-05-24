@@ -14,6 +14,8 @@
 #include <pthread.h>
 #include <ctype.h>
 
+extern int cors;
+
 // frees the response data structures
 void free_response(struct Response *response)
 {
@@ -21,6 +23,8 @@ void free_response(struct Response *response)
     {
         if (response->headers)
             free_header_request(response->headers);
+        if(response->body)
+            free(response->body);
         free(response);
     }
 }
@@ -237,23 +241,28 @@ void set_header_and_HTTPversion(int status_code, struct Response *response)
     header->name = strdup("Connection");
     header->values = strdup("keep-alive");
     
-    header->next = malloc(sizeof(struct Header));
-    header = header->next;
-    header->name = strdup("Access-Control-Allow-Origin");
-    header->values = strdup("http://localhost:8080, http://localhost:8081");
+    if(cors){
+        header->next = malloc(sizeof(struct Header));
+        header = header->next;
+        header->name = strdup("Access-Control-Allow-Origin");
+        header->values = strdup(origin);
 
-    header->next = malloc(sizeof(struct Header));
-    header = header->next;
-    header->name = strdup("Access-Control-Allow-Methods");
-    header->values = strdup("GET, PUT, POST, DELETE");
+        header->next = malloc(sizeof(struct Header));
+        header = header->next;
+        header->name = strdup("Access-Control-Allow-Methods");
+        header->values = strdup("GET, PUT, POST, DELETE");
 
-    header->next = malloc(sizeof(struct Header));
-    header = header->next;
-    header->name = strdup("Access-Control-Allow-Headers");
-    header->values = strdup("Content-Type, Authorization");
+        header->next = malloc(sizeof(struct Header));
+        header = header->next;
+        header->name = strdup("Access-Control-Allow-Headers");
+        header->values = strdup("Content-Type, Authorization");
+    }
+    
     header->next = NULL;
 }
 
+
+// new functions from here
 void set_header(Response *res, char *name, char *val){
     Header *h = (Header *)malloc(sizeof(Header));
     h->name = strdup(name);
@@ -262,4 +271,47 @@ void set_header(Response *res, char *name, char *val){
     h->next = res->headers;
     res->headers = h;
 }
+
+Response *new_response(){
+    Response *temp = (Response *)malloc(sizeof(Response));
+    temp->body = NULL;
+    temp->headers = NULL;
+    temp->status_code = -1;
+    temp->status_message[0] = '\0';
+    
+    return temp;
+}
+
+// send the response including the body
+// generally used by user when sending custom response
+// the headers in this will be set by the user
+void send_response(Response *res, int sock){
+    int status_code = res->status_code == -1 ? 200 : res->status_code;
+    strcpy(res->HTTP_version, "HTTP/1.1");
+
+    // make the version line and status message
+    if(strlen(res->status_message) == 0){
+        // set the status message as per the status code
+        if (status_code == 200)
+            strcpy(res->status_message, "OK");
+        else if (status_code == 400)
+            strcpy(res->status_message, "Bad Request");
+        else if (status_code == 403)
+            strcpy(res->status_message, "Forbidden");
+        else if (status_code == 404)
+            strcpy(res->status_message, "Not Found");
+        else if (status_code == 302)
+            strcpy(res->status_message, "Found");
+    }
+    // set some default set of headers on the basis of the status code
+
+    // check if the user has already set them, if yes, over ride the default
+
+    // send the headers, including version and status message
+    send_response_header(sock, res);
+    // send the body if it is not present
+    if(res->body) send(sock, res->body, strlen(res->body), 0); 
+
+}
+
 

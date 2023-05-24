@@ -21,6 +21,8 @@
 
 int check = 0;
 extern int auth;
+int cors = 0;
+// char origin[100];
 extern session_head *head_ptr;
 
 int hash(char *s)
