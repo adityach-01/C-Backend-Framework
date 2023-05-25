@@ -208,20 +208,20 @@ void set_header(Response *res, char *name, char *val){
 }
 
 void set_header_and_HTTPversion(int status_code, struct Response *response)
-{
-    if (status_code == 200 || status_code == -1){
-        strcpy(response->status_message, "OK");
-        status_code = 200;
+{   
+    if(strlen(response->status_message) == 0){
+        if (status_code == 200)
+            strcpy(response->status_message, "OK");
+        else if (status_code == 400)
+            strcpy(response->status_message, "Bad Request");
+        else if (status_code == 403)
+            strcpy(response->status_message, "Forbidden");
+        else if (status_code == 404)
+            strcpy(response->status_message, "Not Found");
+        else if (status_code == 302)
+            strcpy(response->status_message, "Found");
     }
-    else if (status_code == 400)
-        strcpy(response->status_message, "Bad Request");
-    else if (status_code == 403)
-        strcpy(response->status_message, "Forbidden");
-    else if (status_code == 404)
-        strcpy(response->status_message, "Not Found");
-    else if (status_code == 302){
-        strcpy(response->status_message, "Found");
-    }
+    
 
     strcpy(response->HTTP_version, "HTTP/1.1");
     response->status_code = status_code;
@@ -289,13 +289,14 @@ Response *new_response(){
 // the headers in this will be set by the user
 void send_response(Response *res, int sock){
 
+    int status = res->status_code == -1 ? 200 : res->status_code;
     Header *user_header = res->headers;
     res->headers = NULL;
 
     // set default headers and HTTP version
     // set some default set of headers on the basis of the status code
     // default headers CORS, content-length, content-type, 
-    set_header_and_HTTPversion(res->status_code, res);
+    set_header_and_HTTPversion(status, res);
 
     // set the content length and text format headers
     int len = res->body ? strlen(res->body) : 0;
@@ -346,5 +347,14 @@ void CORS_enable(char *address){
     cors = 1;
     strcpy(origin, address);
 }
+
+void set_status_message(Response *res, char *msg){
+    if(strlen(msg) > 100){
+        perror("To large status message in set_status_message\n");
+        exit(0);
+    }
+    strcpy(res->status_message, msg);
+}
+
 
 

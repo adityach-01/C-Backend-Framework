@@ -326,27 +326,17 @@ void send_forbidden_info(int socket, int status)
     struct Response *response = new_response();
 
     set_header_and_HTTPversion(status, response);
-    struct Header *h = response->headers;
-
-    while (h->next)
-        h = h->next;
-
 
     // change this to something more professional
 
     char forbid[200] = "Forbidden for you, chal nikal lawde !!";
-    h->next = malloc(sizeof(struct Header));
-    h = h->next;
-    h->name = strdup("Content-Length");
-    h->values = strdup("37");
-    h->next = malloc(sizeof(struct Header));
-    h = h->next;
-    h->name = strdup("Content-Type");
-    h->values = strdup("text/*");
-    h->next = NULL;
+    set_header(response, "Content-Length", "37");
+    set_header(response, "Content-Type", "text/*");
 
     send_response_header(socket, response);
     free_response(response);
+
+    // sending the content of the response
     send(socket, forbid, strlen(forbid), 0);
 }
 

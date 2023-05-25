@@ -78,6 +78,9 @@ int user_loader(Request *req, char *pk, int socket, int status)
     // user can do anything with the status code
     // redirect or display forbidden as per need
 
+    // one can use the pk to get the user from the db
+    // and then load the user info into the current_user dictinary in request struct
+
     // populates current user in the req array
     if (!pk || strcmp(pk, "adityachoudhary.01m@gmail.com") != 0)
     {

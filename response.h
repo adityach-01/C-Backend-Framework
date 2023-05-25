@@ -22,6 +22,7 @@ void set_header_and_HTTPversion(int status_code, struct Response *response);
 void set_header(Response *res, char *name, char *val);
 void CORS_enable(char *address);
 void send_response(Response *res, int sock);
+void set_status_message(Response *res, char *msg);
 Response *new_response();
 
 #endif
