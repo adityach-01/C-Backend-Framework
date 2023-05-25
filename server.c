@@ -281,7 +281,7 @@ void search_and_send_file(int new_socket, char *path)
     int x = stat(path + 1, &st);
 
     // create response object
-    struct Response *response = malloc(sizeof(struct Response));
+    struct Response *response = new_response();
 
     if (x == -1)
     {
@@ -323,7 +323,7 @@ void send_forbidden_info(int socket, int status)
     }
 
     /// create the response object
-    struct Response *response = malloc(sizeof(struct Response));
+    struct Response *response = new_response();
 
     set_header_and_HTTPversion(status, response);
     struct Header *h = response->headers;
@@ -402,11 +402,15 @@ void *execute(void *ptr)
             out_pointer = (*func)(req, new_socket);
         }
 
-        // if(out_pointer != NULL){
-        //     // send the message to the client
-                // set the header and configure the body
-        //     send(new_socket, out_pointer, strlen(out_pointer), 0);
-        // }
+        if(out_pointer != NULL){
+            // send the message to the client
+            // set the header and configure the body
+            Response *res = new_response();
+            res->body = strdup(out_pointer);
+            send_response(res, new_socket);
+
+            free_response(res);
+        }
 
         free_request(req);
     }
@@ -558,10 +562,10 @@ OUT about(Request *req, int new_socket)
     // c[2] = a3;
     // c[3] = d;
 
-    render_template(new_socket, "about.html");
+    return render_template(new_socket, "about.html");
     // jsonify(new_socket, 200, c,1,4);
 
-    return NULL;
+    // return NULL;
 }
 
 OUT login(Request *req, int new_socket)
@@ -576,6 +580,8 @@ OUT login(Request *req, int new_socket)
         int x = strcmp((char *)email, "adityachoudhary.01m@gmail.com");
         int y = strcmp((char *)pass, "1234");
 
+        printf("HELLO\n");
+
         if (x == 0 && y == 0)
         {
             void *pt = req->query_params.search(&req->query_params, "redirect");
@@ -589,43 +595,42 @@ OUT login(Request *req, int new_socket)
         else
         {
             // flash(new_socket, "Wow");
-            redirect(new_socket, "/login", NULL);
+            redirect(new_socket, "/login/", NULL);
             return NULL;
         }
     }
 
-    render_template(new_socket, "login.html");
+    return render_template(new_socket, "login.html");
     // redirect(new_socket, "https://www.google.com", NULL);
-    return NULL;
+    // return NULL;
 }
 
 OUT quiz(Request *req, int new_socket)
 {
-    render_template(new_socket, "quiz.html");
-    return NULL;
+    return render_template(new_socket, "quiz.html");
+    // return NULL;
 }
 
 OUT gallery(Request *req, int new_socket)
 {
-    render_template(new_socket, "gallery.html");
+    // return render_template(new_socket, "gallery.html");
     // return "This is gallery!";
+    redirect(new_socket, "/quiz", NULL);
     return NULL;
 }
 
 OUT about_id(Request *req, int new_socket)
 {   
-    printf("ABC in func\n");
     
     Dictionary d = req->query_params;
 
     void *val = d.search(&d, "id");
-    printf("ID is %d\n", *(int *)val);
     Dictionary c = init_dict();
     c.insert(&c, "id", val, 0);
 
-    jsonify(new_socket, 200, &c, 0, 1);
+    return jsonify(new_socket, 200, &c, 0, 1);
 
-    return NULL;
+    // return NULL;
 }
 
 int main(int argc, char *argv[])
@@ -640,11 +645,12 @@ int main(int argc, char *argv[])
     int num = 2;
     // LoginManager();
     add_route("/", &home, methods, num);
-    add_route("/login", &login, methods, num);
+    add_route("/login/", &login, methods, num);
     add_route("/about", &about, methods, num);
     add_route("/quiz", &quiz, methods, num);
     add_route("/gallery", &gallery, methods, num);
     add_route("/gallery/<int:id>", &about_id, methods, num);
+    CORS_enable("https://localhost:8080, https://localhost:8081");
     // login_required("/about");
     // login_required("/quiz");
     // login_required("/gallery");
