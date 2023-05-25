@@ -21,5 +21,8 @@ template.o: template.c template.h common.h request.h response.h dictionary.h aut
 dictionary.o: dictionary.c dictionary.h
 	gcc -c dictionary.c
 
+git:
+	git add . && git commit . -m "Feature Implemented" && git push origin
+
 clean:
 	rm -f response.o request.o dictionary.o template.o auth.o a.out
