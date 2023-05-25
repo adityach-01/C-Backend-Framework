@@ -237,39 +237,11 @@ void set_header_and_HTTPversion(int status_code, struct Response *response)
     set_header(response, "Cache-Control", "no-store always");
     set_header(response, "Content-language", "en-us");
     set_header(response, "Connection", "keep-alive");
-    // header->next = malloc(sizeof(struct Header));
-    // header = header->next;
-    // header->name = strdup("Cache-Control");
-    // header->values = strdup("no-store always");
-
-    // header->next = malloc(sizeof(struct Header));
-    // header = header->next;
-    // header->name = strdup("Content-language");
-    // header->values = strdup("en-us");
-
-    // header->next = malloc(sizeof(struct Header));
-    // header = header->next;
-    // header->name = strdup("Connection");
-    // header->values = strdup("keep-alive");
     
     if(cors){
         set_header(response, "Access-Control-Allow-Origin", origin);
         set_header(response, "Access-Control-Allow-Methods", "GET, PUT, POST, DELETE");
         set_header(response, "Access-Control-Allow-Headers", "Content-Type, Authorization");
-        // header->next = malloc(sizeof(struct Header));
-        // header = header->next;
-        // header->name = strdup("Access-Control-Allow-Origin");
-        // header->values = strdup(origin);
-
-        // header->next = malloc(sizeof(struct Header));
-        // header = header->next;
-        // header->name = strdup("Access-Control-Allow-Methods");
-        // header->values = strdup("GET, PUT, POST, DELETE");
-
-        // header->next = malloc(sizeof(struct Header));
-        // header = header->next;
-        // header->name = strdup("Access-Control-Allow-Headers");
-        // header->values = strdup("Content-Type, Authorization");
     }
 }
 
@@ -317,7 +289,8 @@ void send_response(Response *res, int sock){
         Header *temp = user_header->next;
         while(h){
             if(strcmp(user_header->name, h->name) == 0){
-                h->values = user_header->values;
+                if(h->values) free(h->values);
+                h->values = strdup(user_header->values);
                 index = 1;
 
                 // free the header
@@ -356,5 +329,9 @@ void set_status_message(Response *res, char *msg){
     strcpy(res->status_message, msg);
 }
 
+void set_body(Response *res, char *body){
+    if(res->body) free(res->body);
+    res->body = strdup(body);
+}
 
 

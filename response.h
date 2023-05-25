@@ -23,6 +23,7 @@ void set_header(Response *res, char *name, char *val);
 void CORS_enable(char *address);
 void send_response(Response *res, int sock);
 void set_status_message(Response *res, char *msg);
+void set_body(Response *res, char *body);
 Response *new_response();
 
 #endif

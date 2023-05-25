@@ -597,16 +597,25 @@ OUT login(Request *req, int new_socket)
 
 OUT quiz(Request *req, int new_socket)
 {
-    return render_template(new_socket, "quiz.html");
+    // return render_template(new_socket, "quiz.html");
     // return NULL;
+    Response *res = new_response();
+    res->status_code = 200;
+    set_status_message(res, "OK");
+    set_header(res, "AUTH_TOKEN", "dfjiuydyfguhu");
+    set_header(res, "Content-Type", "text/html");
+    set_body(res, "This is the C backend Library!!");
+
+    send_response(res, new_socket);
+    return NULL;
 }
 
 OUT gallery(Request *req, int new_socket)
 {
     // return render_template(new_socket, "gallery.html");
-    // return "This is gallery!";
-    redirect(new_socket, "/quiz", NULL);
-    return NULL;
+    return "This is gallery!";
+    // redirect(new_socket, "/quiz", NULL);
+    // return NULL;
 }
 
 OUT about_id(Request *req, int new_socket)
