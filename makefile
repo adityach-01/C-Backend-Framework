@@ -1,5 +1,8 @@
 a.out: server.c response.o request.o template.o dictionary.o auth.o
-	gcc -g server.c response.o request.o dictionary.o template.o auth.o -lpthread
+	gcc server.c response.o request.o dictionary.o template.o auth.o -lpthread
+
+debug:
+	gcc -ggdb3 -std=c11 server.c response.o request.o dictionary.o template.o auth.o -lpthread
 # ./a.out: CBack.c CBack.h server.c
 # 	gcc server.o CBack.c -lpthread
 
@@ -14,6 +17,9 @@ response.o: response.c response.h common.h
 
 request.o: request.c request.h common.h
 	gcc -c request.c
+
+val:
+	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose --log-file=valgrind-out.txt ./a.out 8080
 
 template.o: template.c template.h common.h request.h response.h dictionary.h auth.h
 	gcc -c template.c

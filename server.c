@@ -521,8 +521,8 @@ void create_app(int port)
 // for now these functions return the pay load to be sent
 OUT home(Request *req, int new_socket)
 {
-    render_template(new_socket, "index.html");
-    return NULL;
+    return render_template(new_socket, "index.html");
+    // return NULL;
 }
 
 OUT about(Request *req, int new_socket)
@@ -644,7 +644,7 @@ int main(int argc, char *argv[])
     int num = 2;
     // LoginManager();
     add_route("/", &home, methods, num);
-    add_route("/login/", &login, methods, num);
+    add_route("/login", &login, methods, num);
     add_route("/about", &about, methods, num);
     add_route("/quiz", &quiz, methods, num);
     add_route("/gallery", &gallery, methods, num);

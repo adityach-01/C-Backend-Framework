@@ -29,75 +29,6 @@ void free_response(struct Response *response)
     }
 }
 
-char **tokenize_command(char *cmd)
-{
-    // GET http://127.0.0.1/home/rsh-raj/Documents/KGP/sem6/networks/Networks-Lab-Spring-2023/Assign1/Assgn-1.pdf:3000
-    int index = 0;
-    char temp[5000];
-
-    char **cmdarr;
-    cmdarr = (char **)malloc(sizeof(char *));
-    cmdarr[index] = (char *)malloc(1000 * sizeof(char));
-
-    int cnt = 0;
-    int flag = 0;
-    int space = 0;
-    for (int i = 0; cmd[i] != '\0'; i++)
-    {
-        // remove the starting spaces
-        if (flag == 0 && cmd[i] == ' ')
-            continue;
-        flag = 1;
-
-        cnt = 0;
-        if (space == 1 && cmd[i] == ' ')
-            continue;
-        else if (cmd[i] == ' ')
-        {
-            temp[cnt++] = cmd[i];
-            space = 1;
-            continue;
-        }
-
-        // index for populating the array
-        while (!(cmd[i] == ' ' && cmd[i - 1] != '\\'))
-        {
-            if (cmd[i] == '\0')
-                break;
-            if (cmd[i] == '\\')
-            {
-                i++;
-                // skipping the back slash
-                temp[cnt++] = cmd[i++];
-                continue;
-            }
-            temp[cnt++] = cmd[i++];
-            // added random
-        }
-
-        temp[cnt++] = '\0';
-        // printf("Temp is %s\n", temp);
-
-        // copy temp into the cmdarr
-        strcpy(cmdarr[index++], temp);
-
-        // realloc cmdarr
-        char **tmp = (char **)realloc(cmdarr, (index + 1) * sizeof(char *));
-        if (tmp == NULL)
-        {
-            printf("realloc failed:367\n");
-            exit(1);
-        }
-        cmdarr = tmp;
-
-        if (cmd[i] == '\0')
-            break;
-        cmdarr[index] = (char *)malloc(1000 * sizeof(char));
-    }
-
-    cmdarr[index] = NULL;
-    return cmdarr;
-}
 
 char *modifydate(int changeday, struct tm tm)
 {
@@ -111,7 +42,12 @@ char *modifydate(int changeday, struct tm tm)
     buf[strlen(buf) - 1] = '\0';
     // printf("%s\n", buf);
 
-    char **temp = tokenize_command(buf);
+    char *temp[10];
+    temp[0] = strtok(buf, " ");
+    temp[1] = strtok(NULL, " ");
+    temp[2] = strtok(NULL, " ");
+    temp[3] = strtok(NULL, " ");
+    temp[4] = strtok(NULL, " ");
 
     // Now HTTP formatting
     char *final = (char *)malloc(100 * sizeof(char));
@@ -127,23 +63,38 @@ char *modifydate(int changeday, struct tm tm)
     strcat(final, " ");
     strcat(final, "IST");
 
-    free(temp);
-
     // printf("Final date : %s\n", final);
+    // returns a malloced pointer
     return final;
 }
 
 void send_response_header(int client_sockfd, struct Response *response)
 {
-    char *responseString = malloc(50);
+    char status_code[4];
+    sprintf(status_code, "%d", response->status_code);
 
+    int length_to_allocate = 0;
+    length_to_allocate += strlen(response->HTTP_version) + strlen(status_code) + strlen(response->status_message) + 4;
+
+    Header *head = response->headers;
+    int header_len = 0;
+    while(head){
+        header_len += (strlen(head->name) + strlen(head->values) + 4);
+        head = head->next;
+    }
+
+    length_to_allocate += header_len + 10;
+
+    char *responseString = malloc(length_to_allocate);
+    
     strcpy(responseString, response->HTTP_version);
     strcat(responseString, " ");
 
-    char status_code[4];
-    sprintf(status_code, "%d", response->status_code);
     strcat(responseString, status_code);
 
+    // version + 1 + status_code + 1 + status_message + 2(\r\n)
+    // for each header space needed, h-name h-values + 2( :) + 2(\r\n)
+    // last space +3 \r\n\0
     strcat(responseString, " ");
     strcat(responseString, response->status_message);
     strcat(responseString, "\r\n");
@@ -151,8 +102,8 @@ void send_response_header(int client_sockfd, struct Response *response)
     struct Header *h;
     for (h = response->headers; h; h = h->next)
     {
-        char *temp = (char *)realloc(responseString, strlen(responseString) + strlen(h->name) + strlen(h->values) + 5);
-        responseString = temp;
+        // char *temp = (char *)realloc(responseString, strlen(responseString) + strlen(h->name) + strlen(h->values) + 5);
+        // responseString = temp;
 
         strcat(responseString, h->name);
         strcat(responseString, ": ");
@@ -173,16 +124,20 @@ void send_response_file(int new_socket, char *url)
 
     // send the file
     FILE *fp = fopen(url, "r");
-    char *buffer = malloc(1025 * sizeof(char));
+    printf("This is send_response_file\n");
+
+    // char *buffer = (char *)malloc(sizeof(char)*1025);
+    char buffer[1025];
     int n;
     int totalBytes = 0;
-    // printf("XXX\n");
 
+    // fseek(fp, 0, SEEK_SET);
+    printf("This is send_response_file\n");
     while (1)
     {   
-        // printf("ABC\n");
-        n = fread(buffer, 1, 1024, fp);
-        // printf("ABC\n");
+        printf("ABC\n");
+        n = fread(buffer, 1, 1000, fp);
+        printf("ABC\n");
         if(n <= 0) break;
 
         send(new_socket, buffer, n, 0);
@@ -194,7 +149,7 @@ void send_response_file(int new_socket, char *url)
     printf("\nTotal bytes sent: %d\n", totalBytes);
     fclose(fp);
     printf("File sent successfully!\n");
-    free(buffer);
+    // free(buffer);
 }
 
 // new functions from here
@@ -233,7 +188,11 @@ void set_header_and_HTTPversion(int status_code, struct Response *response)
     time_t t = time(NULL);
     struct tm tmarst = *localtime(&t);
     // header->values = modifydate(3, tmarst);
-    set_header(response, "Expires", modifydate(3, tmarst));
+    char *ptr = modifydate(3, tmarst);
+    char date[100];
+    strcpy(date, ptr);
+    free(ptr);
+    set_header(response, "Expires", date);
     set_header(response, "Cache-Control", "no-store always");
     set_header(response, "Content-language", "en-us");
     set_header(response, "Connection", "keep-alive");
