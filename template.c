@@ -105,7 +105,7 @@ void redirect(int new_socket, char *end, char *pk){
         char content[300];
         strcpy(content,"session_token=");
         strcat(content, token);
-        strcat(content, "; Expires=Sat, 10 May 2023 12:00:00 GMT; Path=/; Domain=127.0.0.1; Secure; HttpOnly");
+        strcat(content, "; Expires=Sat, 30 May 2024 12:00:00 GMT; Path=/; Domain=127.0.0.1; Secure; HttpOnly");
         // h->values = strdup(content);
         set_header(response, "Set-Cookie", content);
         // h->values = strdup("Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c");
