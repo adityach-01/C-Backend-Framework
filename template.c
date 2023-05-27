@@ -17,7 +17,7 @@
 
 extern int auth;
 
-void render_template(int new_socket, char *p){
+void *render_template(int new_socket, char *p){
     struct stat st;
     char path[100];
     strcpy(path, "templates/");
@@ -26,7 +26,7 @@ void render_template(int new_socket, char *p){
     int status_code = 200;
     int x = stat(path, &st);
 
-    struct Response *response = malloc(sizeof(struct Response));
+    struct Response *response = new_response();
 
     if (x == -1)
     {
@@ -35,50 +35,32 @@ void render_template(int new_socket, char *p){
     }
 
     set_header_and_HTTPversion(status_code, response);
-    struct Header *h = response->headers;
-    while(h->next) h = h->next;
 
     char content_length[100];
     sprintf(content_length, "%lld", st.st_size);
 
-    h->next = malloc(sizeof(struct Header));
-    h = h->next;
-    h->name = strdup("Content-Length");
-    h->values = strdup(content_length);
-    h->next = malloc(sizeof(struct Header));
-    h = h->next;
-    h->name = strdup("Content-Type");
-    h->values = strdup("text/html");
-    h->next = NULL;
-
+    set_header(response, "Content-Length", content_length);
+    set_header(response, "Content-Type", "text/html");
     send_response_header(new_socket, response);
     free_response(response);
     send_response_file(new_socket, path);
+
+    return NULL;
 }
 
 
-void jsonify(int new_socket,int status_code, Dictionary *d, int isList, int size){
+void *jsonify(int new_socket,int status_code, Dictionary *d, int isList, int size){
     char *sendString;
     sendString = convert_dict_to_string(d,isList,size);
 
-    struct Response *response = malloc(sizeof(struct Response));
-
+    struct Response *response = new_response();
     set_header_and_HTTPversion(status_code, response);
-    struct Header *h = response->headers;
-    while(h->next) h = h->next;
 
     char content_length[100];
     sprintf(content_length, "%ld", strlen(sendString));
 
-    h->next = malloc(sizeof(struct Header));
-    h = h->next;
-    h->name = strdup("Content-Length");
-    h->values = strdup(content_length);
-    h->next = malloc(sizeof(struct Header));
-    h = h->next;
-    h->name = strdup("Content-Type");
-    h->values = strdup("application/json");
-    h->next = NULL;
+    set_header(response, "Content-Length", content_length);
+    set_header(response, "Content-Type", "application/json");
 
     // printf("XX\n");
 
@@ -93,44 +75,43 @@ void jsonify(int new_socket,int status_code, Dictionary *d, int isList, int size
     printf("Data sent successfully!\n");
 
     free(sendString);
+
+    return NULL;
 }
 
 void redirect(int new_socket, char *end, char *pk){
 
-    struct Response *response = malloc(sizeof(struct Response));
+    struct Response *response = new_response();
     set_header_and_HTTPversion(302, response);
-    struct Header *h = response->headers;
 
     // printf("endpoint is :%s\n", end);
-
-    h->name = strdup("Location");
-    h->values = strdup(end);
-    h->next = malloc(sizeof(Header));
-    h = h->next;
-    h->name = strdup("Connection");
-    h->values = strdup("keep-alive");
+    set_header(response, "Location", end);
+    set_header(response, "Connection", "keep-alive");
+    // h->name = strdup("Location");
+    // h->values = strdup(end);
+    // h->next = malloc(sizeof(Header));
+    // h = h->next;
+    // h->name = strdup("Connection");
+    // h->values = strdup("keep-alive");
 
     // printf("endpoint is :%s\n", end);
 
 
     if(pk && auth){
         char *token = generate_session_token(pk);
-        h->next = malloc(sizeof(Header));
-        h = h->next;
-        h->name = strdup("Set-Cookie");
+        // h->next = malloc(sizeof(Header));
+        // h = h->next;
+        // h->name = strdup("Set-Cookie");
         char content[300];
         strcpy(content,"session_token=");
         strcat(content, token);
         strcat(content, "; Expires=Sat, 10 May 2023 12:00:00 GMT; Path=/; Domain=127.0.0.1; Secure; HttpOnly");
-        h->values = strdup(content);
+        // h->values = strdup(content);
+        set_header(response, "Set-Cookie", content);
         // h->values = strdup("Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c");
     }
 
-    // printf("endpoint is :%s\n", end);
-
-    
-    h->next = NULL;
-
+    // printf("endpoint is :%s\n", end)
     send_response_header(new_socket, response);
     free_response(response);
     // close(new_socket);

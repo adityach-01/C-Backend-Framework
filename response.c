@@ -14,6 +14,8 @@
 #include <pthread.h>
 #include <ctype.h>
 
+extern int cors;
+
 // frees the response data structures
 void free_response(struct Response *response)
 {
@@ -21,6 +23,8 @@ void free_response(struct Response *response)
     {
         if (response->headers)
             free_header_request(response->headers);
+        if(response->body)
+            free(response->body);
         free(response);
     }
 }
@@ -193,67 +197,7 @@ void send_response_file(int new_socket, char *url)
     free(buffer);
 }
 
-void set_header_and_HTTPversion(int status_code, struct Response *response)
-{
-    if (status_code == 200)
-        strcpy(response->status_message, "OK");
-    else if (status_code == 400)
-        strcpy(response->status_message, "Bad Request");
-    else if (status_code == 403)
-        strcpy(response->status_message, "Forbidden");
-    else if (status_code == 404)
-        strcpy(response->status_message, "Not Found");
-    else if (status_code == 302){
-        strcpy(response->status_message, "Found");
-    }
-
-    strcpy(response->HTTP_version, "HTTP/1.1");
-    response->status_code = status_code;
-
-    struct Header *header = malloc(sizeof(struct Header));
-    header->next = NULL;
-    response->headers = header;
-
-    if(status_code == 302) return;
-
-    header->name = strdup("Expires");
-    // header->values = strdup("Thu, 01 Dec 1994 16:00:00 GMT");
-    time_t t = time(NULL);
-    struct tm tmarst = *localtime(&t);
-    header->values = modifydate(3, tmarst);
-
-    header->next = malloc(sizeof(struct Header));
-    header = header->next;
-    header->name = strdup("Cache-Control");
-    header->values = strdup("no-store always");
-
-    header->next = malloc(sizeof(struct Header));
-    header = header->next;
-    header->name = strdup("Content-language");
-    header->values = strdup("en-us");
-
-    header->next = malloc(sizeof(struct Header));
-    header = header->next;
-    header->name = strdup("Connection");
-    header->values = strdup("keep-alive");
-    
-    header->next = malloc(sizeof(struct Header));
-    header = header->next;
-    header->name = strdup("Access-Control-Allow-Origin");
-    header->values = strdup("http://localhost:8080, http://localhost:8081");
-
-    header->next = malloc(sizeof(struct Header));
-    header = header->next;
-    header->name = strdup("Access-Control-Allow-Methods");
-    header->values = strdup("GET, PUT, POST, DELETE");
-
-    header->next = malloc(sizeof(struct Header));
-    header = header->next;
-    header->name = strdup("Access-Control-Allow-Headers");
-    header->values = strdup("Content-Type, Authorization");
-    header->next = NULL;
-}
-
+// new functions from here
 void set_header(Response *res, char *name, char *val){
     Header *h = (Header *)malloc(sizeof(Header));
     h->name = strdup(name);
@@ -262,4 +206,132 @@ void set_header(Response *res, char *name, char *val){
     h->next = res->headers;
     res->headers = h;
 }
+
+void set_header_and_HTTPversion(int status_code, struct Response *response)
+{   
+    if(strlen(response->status_message) == 0){
+        if (status_code == 200)
+            strcpy(response->status_message, "OK");
+        else if (status_code == 400)
+            strcpy(response->status_message, "Bad Request");
+        else if (status_code == 403)
+            strcpy(response->status_message, "Forbidden");
+        else if (status_code == 404)
+            strcpy(response->status_message, "Not Found");
+        else if (status_code == 302)
+            strcpy(response->status_message, "Found");
+    }
+    
+
+    strcpy(response->HTTP_version, "HTTP/1.1");
+    response->status_code = status_code;
+
+    // no default headers if redirect
+    if(status_code == 302) return;
+
+    // start setting default headers
+    time_t t = time(NULL);
+    struct tm tmarst = *localtime(&t);
+    // header->values = modifydate(3, tmarst);
+    set_header(response, "Expires", modifydate(3, tmarst));
+    set_header(response, "Cache-Control", "no-store always");
+    set_header(response, "Content-language", "en-us");
+    set_header(response, "Connection", "keep-alive");
+    
+    if(cors){
+        set_header(response, "Access-Control-Allow-Origin", origin);
+        set_header(response, "Access-Control-Allow-Methods", "GET, PUT, POST, DELETE");
+        set_header(response, "Access-Control-Allow-Headers", "Content-Type, Authorization");
+    }
+}
+
+
+Response *new_response(){
+    Response *temp = (Response *)malloc(sizeof(Response));
+    temp->body = NULL;
+    temp->headers = NULL;
+    temp->status_code = -1;
+    temp->status_message[0] = '\0';
+    
+    return temp;
+}
+
+// send the response including the body
+// generally used by user when sending custom response
+// the headers in this will be set by the user
+void send_response(Response *res, int sock){
+
+    int status = res->status_code == -1 ? 200 : res->status_code;
+    Header *user_header = res->headers;
+    res->headers = NULL;
+
+    // set default headers and HTTP version
+    // set some default set of headers on the basis of the status code
+    // default headers CORS, content-length, content-type, 
+    set_header_and_HTTPversion(status, res);
+
+    // set the content length and text format headers
+    int len = res->body ? strlen(res->body) : 0;
+    char str[10];
+    sprintf(str, "%d", len);
+
+    // set the headers
+    set_header(res, "Content-Length", str);
+    set_header(res, "Content-Type", "text/*");
+    
+    // check if the user has already set them, if yes, over ride the default
+    // very important step
+    int index = 0;
+    while(user_header){
+        // check if this header exists in default headers
+        index = 0;
+        Header *h = res->headers;
+        Header *temp = user_header->next;
+        while(h){
+            if(strcmp(user_header->name, h->name) == 0){
+                if(h->values) free(h->values);
+                h->values = strdup(user_header->values);
+                index = 1;
+
+                // free the header
+                user_header->next = NULL;
+                free_header_request(user_header);
+                break;
+            }
+
+            h = h->next;
+        }
+        if(index == 0){
+            // means the goven header is not in the default headers
+            user_header->next = res->headers;
+            res->headers = user_header;
+        }
+
+        user_header = temp;;
+    }
+
+    // send the headers, including version and status message
+    send_response_header(sock, res);
+    // send the body if it is not present
+    if(res->body) send(sock, res->body, strlen(res->body), 0); 
+}
+
+void CORS_enable(char *address){
+    cors = 1;
+    strcpy(origin, address);
+}
+
+void set_status_message(Response *res, char *msg){
+    if(strlen(msg) > 100){
+        perror("To large status message in set_status_message\n");
+        exit(0);
+    }
+    strcpy(res->status_message, msg);
+}
+
+void set_body(Response *res, char *body){
+    if(res->body) free(res->body);
+    res->body = strdup(body);
+}
+
 
