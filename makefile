@@ -28,7 +28,7 @@ dictionary.o: dictionary.c dictionary.h
 	gcc -c dictionary.c
 
 git:
-	git add . && git commit . -m "Feature Implemented" && git push origin
+	git add . && git commit . -m "Fixed some memory leaks" && git push origin
 
 clean:
 	rm -f response.o request.o dictionary.o template.o auth.o a.out

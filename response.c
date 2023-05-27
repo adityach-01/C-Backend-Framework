@@ -124,20 +124,15 @@ void send_response_file(int new_socket, char *url)
 
     // send the file
     FILE *fp = fopen(url, "r");
-    printf("This is send_response_file\n");
 
     // char *buffer = (char *)malloc(sizeof(char)*1025);
     char buffer[1025];
     int n;
     int totalBytes = 0;
 
-    // fseek(fp, 0, SEEK_SET);
-    printf("This is send_response_file\n");
     while (1)
     {   
-        printf("ABC\n");
         n = fread(buffer, 1, 1000, fp);
-        printf("ABC\n");
         if(n <= 0) break;
 
         send(new_socket, buffer, n, 0);

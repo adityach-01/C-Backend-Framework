@@ -570,7 +570,6 @@ OUT login(Request *req, int new_socket)
         int x = strcmp((char *)email, "adityachoudhary.01m@gmail.com");
         int y = strcmp((char *)pass, "1234");
 
-        printf("HELLO\n");
 
         if (x == 0 && y == 0)
         {
@@ -585,7 +584,7 @@ OUT login(Request *req, int new_socket)
         else
         {
             // flash(new_socket, "Wow");
-            redirect(new_socket, "/login/", NULL);
+            redirect(new_socket, "/login", NULL);
             return NULL;
         }
     }
@@ -642,7 +641,7 @@ int main(int argc, char *argv[])
 
     char *methods[] = {"GET", "POST"};
     int num = 2;
-    // LoginManager();
+    LoginManager();
     add_route("/", &home, methods, num);
     add_route("/login", &login, methods, num);
     add_route("/about", &about, methods, num);
@@ -650,9 +649,9 @@ int main(int argc, char *argv[])
     add_route("/gallery", &gallery, methods, num);
     add_route("/gallery/<int:id>", &about_id, methods, num);
     CORS_enable("https://localhost:8080, https://localhost:8081");
-    // login_required("/about");
-    // login_required("/quiz");
-    // login_required("/gallery");
+    login_required("/about");
+    login_required("/quiz");
+    login_required("/gallery");
     create_app(port);
 
     return 0;
