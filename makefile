@@ -1,13 +1,13 @@
-a.out: server.c response.o request.o template.o dictionary.o auth.o
-	gcc server.c response.o request.o dictionary.o template.o auth.o -lpthread
+# a.out: server.c response.o request.o template.o dictionary.o auth.o
+# 	gcc server.c response.o request.o dictionary.o template.o auth.o -lpthread
 
-debug:
-	gcc -ggdb3 -std=c11 server.c response.o request.o dictionary.o template.o auth.o -lpthread
-# ./a.out: CBack.c CBack.h server.c
-# 	gcc server.o CBack.c -lpthread
+# debug:
+# 	gcc -ggdb3 -std=c11 server.c response.o request.o dictionary.o template.o auth.o -lpthread
+a.out: CBack.c CBack.h server.o response.o request.o template.o dictionary.o auth.o
+	gcc server.o response.o request.o template.o dictionary.o auth.o CBack.c -o server -lpthread
 
-# server.o: server.c response.h request.h template.h dictionary.h auth.h
-# 	gcc -c server.c 
+server.o: server.c response.h request.h template.h dictionary.h auth.h
+	gcc -c server.c 
 
 auth.o : request.h auth.c template.h common.h dictionary.h response.h
 	gcc -c auth.c
@@ -28,7 +28,7 @@ dictionary.o: dictionary.c dictionary.h
 	gcc -c dictionary.c
 
 git:
-	git add . && git commit . -m "Fixed some memory leaks" && git push origin
+	git add . && git commit . -m "Updated header file" && git push origin
 
 clean:
 	rm -f response.o request.o dictionary.o template.o auth.o a.out

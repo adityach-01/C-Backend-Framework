@@ -73,37 +73,37 @@ char *generate_session_token(char *pk)
 }
 
 // user implementable function that returns that  status code for the request
-int user_loader(Request *req, char *pk, int socket, int status)
-{   
-    // user can do anything with the status code
-    // redirect or display forbidden as per need
+// int user_loader(Request *req, char *pk, int socket, int status)
+// {   
+//     // user can do anything with the status code
+//     // redirect or display forbidden as per need
 
-    // one can use the pk to get the user from the db
-    // and then load the user info into the current_user dictinary in request struct
+//     // one can use the pk to get the user from the db
+//     // and then load the user info into the current_user dictinary in request struct
 
-    // populates current user in the req array
-    if (!pk || strcmp(pk, "adityachoudhary.01m@gmail.com") != 0)
-    {
-        char url_f[100];
-        strcpy(url_f, "/login");
-        strcat(url_f, "?redirect=");
-        strcat(url_f, req->url);
-        redirect(socket, url_f, NULL);
+//     // populates current user in the req array
+//     if (!pk || strcmp(pk, "adityachoudhary.01m@gmail.com") != 0)
+//     {
+//         char url_f[100];
+//         strcpy(url_f, "/login");
+//         strcat(url_f, "?redirect=");
+//         strcat(url_f, req->url);
+//         redirect(socket, url_f, NULL);
 
-        return 302;
-    }
+//         return 302;
+//     }
 
-    else
-    {
-        // update the current_user dictionary
-        return 200;
-    }
+//     else
+//     {
+//         // update the current_user dictionary
+//         return 200;
+//     }
 
-    // else{
-    //     redirect(socket, "/login", NULL);
-    //     return 302;
-    // }
-}
+//     // else{
+//     //     redirect(socket, "/login", NULL);
+//     //     return 302;
+//     // }
+// }
 
 int check_authentication(Request *req, int sock)
 {

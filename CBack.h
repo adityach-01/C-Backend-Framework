@@ -34,33 +34,42 @@ typedef struct Request
 
 typedef struct Response
 {
-    char HTTP_version[10];
+    char HTTP_version[20];
     int status_code;
-    char status_message[10];
+    char status_message[100];
     struct Header *headers;
+    char *body;
 } Response;
 
 #define IN Request *, int
-#define OUT void *
+#define OUT char *
 
-void destroy_dictionary(Dictionary *dict);
+// void destroy_dictionary(Dictionary *dict);
 void insert_dict(Dictionary *dictionary, char *key, void *value, int isString);
 void *search_dict(Dictionary *dictionary, char *key);
 Dictionary init_dict();
 void print_dict(Dictionary d);
 Dictionary get_json(Request *);
 Dictionary get_form_data(Request *);
-void send_response_header(int client_sockfd, struct Response *response);
-void send_response_file(int new_socket, char *url);
-void set_header_and_HTTPversion(int status_code, struct Response *response);
-void render_template(int socket, char *path);
-void jsonify(int socket, int status, Dictionary *d, int isList, int size);
+// void send_response_header(int client_sockfd, struct Response *response);
+// void send_response_file(int new_socket, char *url);
+// void set_header_and_HTTPversion(int status_code, struct Response *response);
+char *render_template(int socket, char *path);
+char *jsonify(int socket, int status, Dictionary *d, int isList, int size);
 void redirect(int new_socket, char *end, char *pk);
 void flash(int new_socket, char *msg);
+char *get_header(Request *req, char *name);
 
-int user_loader(Request *req, char *pk, int socket);
+// int user_loader(Request *req, char *pk, int socket);
 void LoginManager();
 void login_required(char *end);
+void set_header(Response *res, char *name, char *val);
+void CORS_enable(char *address);
+void send_response(Response *res, int sock);
+void set_status_message(Response *res, char *msg);
+void set_body(Response *res, char *body);
+Response *new_response();
+
 
 void create_app(int port);
 void add_route(char *r, OUT (*fn_ptr)(IN), char **methods, int num_methods);

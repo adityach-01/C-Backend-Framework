@@ -518,6 +518,7 @@ void create_app(int port)
     pthread_join(server, NULL);
 }
 
+/*
 // for now these functions return the pay load to be sent
 OUT home(Request *req, int new_socket)
 {
@@ -656,4 +657,4 @@ int main(int argc, char *argv[])
 
     return 0;
 }
-
+*/

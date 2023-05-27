@@ -4,12 +4,43 @@
 #include <pthread.h>
 #include <string.h>
 
+int user_loader(Request *req, char *pk, int socket, int status)
+{   
+    // user can do anything with the status code
+    // redirect or display forbidden as per need
+
+    // one can use the pk to get the user from the db
+    // and then load the user info into the current_user dictinary in request struct
+
+    // populates current user in the req array
+    if (!pk || strcmp(pk, "adityachoudhary.01m@gmail.com") != 0)
+    {
+        char url_f[100];
+        strcpy(url_f, "/login");
+        strcat(url_f, "?redirect=");
+        strcat(url_f, req->url);
+        redirect(socket, url_f, NULL);
+
+        return 302;
+    }
+
+    else
+    {
+        // update the current_user dictionary
+        return 200;
+    }
+
+    // else{
+    //     redirect(socket, "/login", NULL);
+    //     return 302;
+    // }
+}
 
 // for now these functions return the pay load to be sent
 OUT home(Request *req, int new_socket)
 {
-    render_template(new_socket, "index.html");
-    return NULL;
+    return render_template(new_socket, "index.html");
+    // return NULL;
 }
 
 OUT about(Request *req, int new_socket)
@@ -39,10 +70,10 @@ OUT about(Request *req, int new_socket)
     // c[2] = a3;
     // c[3] = d;
 
-    render_template(new_socket, "about.html");
+    return render_template(new_socket, "about.html");
     // jsonify(new_socket, 200, c,1,4);
 
-    return NULL;
+    // return NULL;
 }
 
 OUT login(Request *req, int new_socket)
@@ -57,11 +88,13 @@ OUT login(Request *req, int new_socket)
         int x = strcmp((char *)email, "adityachoudhary.01m@gmail.com");
         int y = strcmp((char *)pass, "1234");
 
+
         if (x == 0 && y == 0)
         {
             void *pt = req->query_params.search(&req->query_params, "redirect");
-            if (!pt)
+            if (!pt){
                 pt = (char *)("/about");
+            }
             redirect(new_socket, (char *)(pt), (char *)email);
             // render_template(new_socket, "login.html");
             return NULL;
@@ -74,31 +107,46 @@ OUT login(Request *req, int new_socket)
         }
     }
 
-    render_template(new_socket, "login.html");
+    return render_template(new_socket, "login.html");
     // redirect(new_socket, "https://www.google.com", NULL);
-    return NULL;
+    // return NULL;
 }
 
 OUT quiz(Request *req, int new_socket)
 {
-    render_template(new_socket, "quiz.html");
+    // return render_template(new_socket, "quiz.html");
+    // return NULL;
+    Response *res = new_response();
+    res->status_code = 200;
+    set_status_message(res, "OK");
+    set_header(res, "AUTH_TOKEN", "dfjiuydyfguhu");
+    set_header(res, "Content-Type", "text/html");
+    set_body(res, "This is the C backend Library!!");
+
+    send_response(res, new_socket);
     return NULL;
 }
 
 OUT gallery(Request *req, int new_socket)
 {
-    render_template(new_socket, "gallery.html");
-    return NULL;
+    // return render_template(new_socket, "gallery.html");
+    return "This is gallery!";
+    // redirect(new_socket, "/quiz", NULL);
+    // return NULL;
 }
 
 OUT about_id(Request *req, int new_socket)
-{
+{   
+    
     Dictionary d = req->query_params;
+
     void *val = d.search(&d, "id");
     Dictionary c = init_dict();
-    c.insert(&c, "id", val, 1);
-    jsonify(new_socket, 200, &c, 0, 1);
-    return NULL;
+    c.insert(&c, "id", val, 0);
+
+    return jsonify(new_socket, 200, &c, 0, 1);
+
+    // return NULL;
 }
 
 int main(int argc, char *argv[])
@@ -117,7 +165,8 @@ int main(int argc, char *argv[])
     add_route("/about", &about, methods, num);
     add_route("/quiz", &quiz, methods, num);
     add_route("/gallery", &gallery, methods, num);
-    add_route("/gallery/<id>", &about_id, methods, num);
+    add_route("/gallery/<int:id>", &about_id, methods, num);
+    CORS_enable("https://localhost:8080, https://localhost:8081");
     login_required("/about");
     login_required("/quiz");
     login_required("/gallery");
