@@ -1,8 +1,20 @@
 #include "CBack.h"
 #include <stdio.h>
-#include <stdlib.h>
-#include <pthread.h>
+#include <unistd.h>
 #include <string.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <time.h>
+#include <pthread.h>
+#include <ctype.h>
+
+// #define IN Request *, int
+// #define OUT char *
 
 int user_loader(Request *req, char *pk, int socket, int status)
 {   
@@ -166,7 +178,7 @@ int main(int argc, char *argv[])
     add_route("/quiz", &quiz, methods, num);
     add_route("/gallery", &gallery, methods, num);
     add_route("/gallery/<int:id>", &about_id, methods, num);
-    CORS_enable("https://localhost:8080, https://localhost:8081");
+    CORS_enable("http://127.0.0.1:8080, http://127.0.0.1:8081");
     login_required("/about");
     login_required("/quiz");
     login_required("/gallery");

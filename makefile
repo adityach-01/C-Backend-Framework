@@ -3,8 +3,8 @@
 
 # debug:
 # 	gcc -ggdb3 -std=c11 server.c response.o request.o dictionary.o template.o auth.o -lpthread
-a.out: CBack.c CBack.h server.o response.o request.o template.o dictionary.o auth.o
-	gcc server.o response.o request.o template.o dictionary.o auth.o CBack.c -o server -lpthread
+a.out: main.c CBack.h server.o response.o request.o template.o dictionary.o auth.o
+	gcc server.o response.o request.o template.o dictionary.o auth.o main.c -o server -lpthread
 
 server.o: server.c response.h request.h template.h dictionary.h auth.h
 	gcc -c server.c 
@@ -28,7 +28,7 @@ dictionary.o: dictionary.c dictionary.h
 	gcc -c dictionary.c
 
 git:
-	git add . && git commit . -m "Updated header file" && git push origin
+	git add . && git commit . -m "${msg}" && git push origin
 
 clean:
-	rm -f response.o request.o dictionary.o template.o auth.o a.out
+	rm -f response.o request.o dictionary.o template.o auth.o a.out server

@@ -187,16 +187,17 @@ void set_header_and_HTTPversion(int status_code, struct Response *response)
     char date[100];
     strcpy(date, ptr);
     free(ptr);
+
+    if(cors){
+        set_header(response, "Access-Control-Allow-Origin", origin);
+        set_header(response, "Access-Control-Allow-Methods", "GET, PUT, POST, DELETE, OPTIONS");
+        set_header(response, "Access-Control-Allow-Headers", "Cookie, Authorization");
+    }
     set_header(response, "Expires", date);
     set_header(response, "Cache-Control", "no-store always");
     set_header(response, "Content-language", "en-us");
-    set_header(response, "Connection", "keep-alive");
+    set_header(response, "Connection", "keep-alive");   
     
-    if(cors){
-        set_header(response, "Access-Control-Allow-Origin", origin);
-        set_header(response, "Access-Control-Allow-Methods", "GET, PUT, POST, DELETE");
-        set_header(response, "Access-Control-Allow-Headers", "Content-Type, Authorization");
-    }
 }
 
 

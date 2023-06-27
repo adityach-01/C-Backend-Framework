@@ -69,7 +69,5 @@ void send_response(Response *res, int sock);
 void set_status_message(Response *res, char *msg);
 void set_body(Response *res, char *body);
 Response *new_response();
-
-
 void create_app(int port);
 void add_route(char *r, OUT (*fn_ptr)(IN), char **methods, int num_methods);
