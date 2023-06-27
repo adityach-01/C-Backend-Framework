@@ -31,4 +31,4 @@ git:
 	git add . && git commit . -m "${msg}" && git push origin
 
 clean:
-	rm -f response.o request.o dictionary.o template.o auth.o a.out server
+	rm -f response.o request.o dictionary.o template.o auth.o a.out server server.o
